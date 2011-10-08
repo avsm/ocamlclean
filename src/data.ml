@@ -81,7 +81,6 @@ let print data =
       |t when t = custom_tag -> out "custom"
       |t when t = 0 -> out (sprintf "block: %d" (size d))
       |_ -> out "XXX"
-     
     end
     |false,true -> out (sprintf "int:%d" (Obj.magic d))
     |_ -> Printf.printf "unknown block\n%!"
@@ -93,22 +92,28 @@ let parse_c ic =
     let line = input_line ic in
     if line = s then () else scan_until s
   in 
-  let rec scan_iter s1 s2 fn =
+  let scan_bytes s1 s2 =
+    let buf = Buffer.create 128 in
     scan_until s1;
     let rec loop () =
-      let l2 = input_line ic in
-      if l2 = s2 then () else (fn l2; loop ())
+      let line = input_line ic in
+      if line <> s2 then begin
+        let bits = Str.(split (regexp_string ", ") line) in
+        List.iter (fun n ->
+          Buffer.add_char buf (Char.chr (int_of_string n))
+        ) bits;
+        loop ()
+      end else
+        Buffer.contents buf
     in
     loop ()
   in
-  let buf = Buffer.create 128 in
-  scan_iter "static char caml_data[] = {" "};"
-    (fun line ->
-      let bits = Str.(split (regexp_string ", ") line) in
-      List.iter (fun n ->
-        Buffer.add_char buf (Char.chr (int_of_string n))
-      ) bits
-    );
-  let (data : Obj.t array) = Marshal.from_string (Buffer.contents buf) 0 in
-  data
+  let data_buf = scan_bytes "static char caml_data[] = {" "};" in
+  let (data : Obj.t array) = Marshal.from_string data_buf 0 in
+  let sec_buf = scan_bytes "static char caml_sections[] = {" "};" in
+  let (sections : (string * Obj.t) list) = Marshal.from_string sec_buf 0 in
+  let prim_buf:string = Obj.magic (List.assoc "PRIM" sections) in
+  (* Primitive strings are NUL-separated *)
+  let prims = Array.of_list (Str.(split (regexp_string "\000") prim_buf)) in
+  data, prims
 

@@ -31,8 +31,12 @@ let load filename =
 
 let load_c filename =
   let ic = open_in filename in
-  let code = Code.parse_c ic in
-  Code.print stdout code;
-  ()
+  let code, code_length = Code.parse_c ic in
+  let data, prim = Data.parse_c ic in
+  close_in ic;
+  let begn = [||] in
+  let dumps = [] in
+  (code, prim, data, begn, dumps,
+   code_length,0,0,0)
 ;;
 

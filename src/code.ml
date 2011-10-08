@@ -402,5 +402,7 @@ let parse_c ic =
     code.(s) <- tmp;
   done;
   compute_ptrs code;
-  Array.map (fun { bc = bc ; old_addr = _ } -> bc) code
+  let ops = Array.map (fun { bc = bc ; old_addr = _ } -> bc) code in
+  let ops = Array.append ops [| Stop |] in
+  ops, (Array.length ops * 4)
 ;;

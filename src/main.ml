@@ -43,11 +43,10 @@ in
       | None -> error "bytecode executable source file undefined";
       | Some f -> f
   in
-  match Filename.check_suffix source_file ".c" with
-  |true -> begin (* Treat as a C file from -output-obj *)
-    Loader.load_c source_file
-  end
-  |false ->
+  let loadfn = match Filename.check_suffix source_file ".c" with
+    |true -> Loader.load_c
+    |false -> Loader.load
+  in
     try
       let pass_counter = ref 0 in
       let rec compress_loop orig_code prim data =
@@ -68,7 +67,7 @@ in
       print_msg (Printf.sprintf "Loading `%s'... " source_file);
       let (code, prim, data, begn, dumps, orig_code_length,
 	   orig_data_length, orig_prim_length, orig_file_length) =
-	Loader.load source_file
+	loadfn source_file
       in
       let orig_instr_nb = Array.length code in
       let orig_data_nb = Array.length data in
