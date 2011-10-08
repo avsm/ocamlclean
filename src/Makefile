@@ -21,7 +21,7 @@ $(TARG): _build/$(BUILD)
 	cp $< $@
 
 _build/$(BUILD): $(SRCS) config.ml
-	$(OCAMLBUILD) $(BUILD)
+	$(OCAMLBUILD) -cflags -annot $(BUILD)
 
 config.ml: $(ETC)/config.ml
 	cp $< $@
