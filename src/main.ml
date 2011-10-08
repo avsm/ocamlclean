@@ -43,6 +43,11 @@ in
       | None -> error "bytecode executable source file undefined";
       | Some f -> f
   in
+  match Filename.check_suffix source_file ".c" with
+  |true -> begin (* Treat as a C file from -output-obj *)
+    Loader.load_c source_file
+  end
+  |false ->
     try
       let pass_counter = ref 0 in
       let rec compress_loop orig_code prim data =

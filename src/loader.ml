@@ -28,3 +28,11 @@ let load filename =
     (code, prim, data, begn, dumps,
      code_length, data_length, prim_length, file_length)
 ;;
+
+let load_c filename =
+  let ic = open_in filename in
+  let code = Code.parse_c ic in
+  Code.print stdout code;
+  ()
+;;
+

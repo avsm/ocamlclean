@@ -342,3 +342,65 @@ let export oc code =
 	pass write step;
     end;
 ;;
+
+let parse_c ic =
+  let rec scan_until s = 
+    let line = input_line ic in
+    if line = s then line else scan_until s
+  in 
+  let rec scan_fold s1 s2 fn acc =
+    let _ = scan_until s1 in
+    let rec loop acc =
+      let l2 = input_line ic in
+      if l2 = s2 then acc else loop (fn acc l2)
+    in
+    loop acc
+  in
+  let opcodes = scan_fold "static int caml_code[] = {" "0x8f};" 
+    (fun acc line ->
+      let bits = Str.split (Str.regexp_string ", ") line in
+      let opcodes = List.map (fun s ->
+        Scanf.sscanf s "0x%02x%02x%02x%02x"
+          (fun c3 c2 c1 c0 -> 
+            let res = c0 lor (c1 lsl 8) lor (c2 lsl 16) lor (c3 lsl 24) in
+            match Sys.word_size with
+            |32 -> res
+            |64 -> (res lsl 32) asr 32
+	    |ws -> raise (Exn (Printf.sprintf "Unsupported architecture: \
+              word size is %d" ws))
+          ) 
+        ) bits
+      in
+      acc @ opcodes  
+    ) []
+  in
+  let cpt = ref 0 in
+  let read () =
+    try
+      let b = List.nth opcodes !cpt in
+      incr cpt;
+      b
+    with _ ->
+      raise End_of_file 
+  in
+  let rec f i acc =
+    let old_addr = !cpt in
+    match Instr.parse read with
+      | None -> acc
+      | Some bcs -> 
+	  let instrs =
+            List.map (fun bc -> { old_addr = old_addr ; bc = bc }) bcs
+	  in
+          f (i + 1) (List.rev instrs @ acc)
+    in
+  let code = Array.of_list (f 0 []) in
+  let nb_instr = Array.length code in
+  for i = 0 to nb_instr / 2 - 1 do
+    let s = nb_instr - i - 1 in
+    let tmp = code.(i) in
+    code.(i) <- code.(s);
+    code.(s) <- tmp;
+  done;
+  compute_ptrs code;
+  Array.map (fun { bc = bc ; old_addr = _ } -> bc) code
+;;
