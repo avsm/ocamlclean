@@ -80,7 +80,7 @@ in
       print_msg "Globalise closures... ";
       let (code, data) = Globalise.doit code data in
       print_done ();
-      print_msg (Printf.sprintf "Writting `%s'... " !dest_file);
+      print_msg (Printf.sprintf "Writing `%s'... " !dest_file);
       let (new_code_length, new_data_length, new_prim_length, new_file_length) =
 	Linker.export !dest_file code prim data begn dumps
       in
