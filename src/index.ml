@@ -13,6 +13,18 @@ exception Exn of string
 
 type section = Code | Dlpt | Dlls | Prim | Data | Symb | Crcs | Dbug
 
+let section_of_string =
+  function
+  | "CODE" -> Code
+  | "DLPT" -> Dlpt
+  | "DLLS" -> Dlls
+  | "PRIM" -> Prim
+  | "DATA" -> Data
+  | "SYMB" -> Symb
+  | "CRCS" -> Crcs
+  | "DBUG" -> Dbug
+  | x -> raise (Exn (Printf.sprintf "invalid section name: `%s'" x))
+ 
 type t = (section * int * int) list
 
 let magic_str = "Caml1999X008"
@@ -29,16 +41,7 @@ let parse ic =
   let read_name offset =
     seek_in ic offset;
     really_input ic buf4 0 4;
-    match buf4 with
-      | "CODE" -> Code
-      | "DLPT" -> Dlpt
-      | "DLLS" -> Dlls
-      | "PRIM" -> Prim
-      | "DATA" -> Data
-      | "SYMB" -> Symb
-      | "CRCS" -> Crcs
-      | "DBUG" -> Dbug
-      | _ -> raise (Exn (Printf.sprintf "invalid section name: `%s'" buf4))
+    section_of_string buf4
   in
     seek_in ic (file_length - magic_size);
     really_input ic buf_magic 0 magic_size;

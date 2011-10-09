@@ -126,7 +126,7 @@ let compute_branch_targets code =
     btargs
 ;;
 
-let export oc code =
+let export_code write oc code =
   let nb_instr = Array.length code in
   let btargs = compute_branch_targets code in
   let map = Array.make nb_instr (-1) in
@@ -332,16 +332,31 @@ let export oc code =
 	pass write step;
     end;
     begin
-      let write n =
-	output_byte oc (n land 0xFF);
-	output_byte oc ((n asr 8) land 0xFF);
-	output_byte oc ((n asr 16) land 0xFF);
-	output_byte oc ((n asr 24) land 0xFF);
-      in
       let step _ = () in
 	pass write step;
     end;
 ;;
+
+let export oc code =
+  let write n =
+    output_byte oc (n land 0xFF);
+    output_byte oc ((n asr 8) land 0xFF);
+    output_byte oc ((n asr 16) land 0xFF);
+    output_byte oc ((n asr 24) land 0xFF);
+  in
+  export_code write oc code
+
+let export_c oc code =
+  let open C_util in
+  let write n =
+    let s = String.create 4 in
+    s.[0] <- Char.chr (n land 0xFF);
+    s.[1] <- Char.chr ((n asr 8) land 0xFF);
+    s.[2] <- Char.chr ((n asr 16) land 0xFF);
+    s.[3] <- Char.chr ((n asr 24) land 0xFF);
+    output_code_string oc s
+  in
+  export_code write oc code
 
 let parse_c ic =
   let rec scan_until s = 

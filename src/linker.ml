@@ -46,3 +46,23 @@ let export filename code prim data begn dumps =
 	close_out oc;
 	(code_length, data_length, prim_length, file_length)
 ;;
+
+let export_c filename code prim data begn dumps =
+  let oc = open_out filename in
+  Printf.fprintf oc "%s\n" "#ifdef __cplusplus
+extern \"C\" {
+#endif
+#include <caml/mlvalues.h>
+CAMLextern void caml_startup_code(
+code_t code, asize_t code_size,
+char *data, asize_t data_size,
+char *section_table, asize_t section_table_size,
+char **argv);
+static int caml_code[] = {";
+  Code.export_c oc code;
+  Printf.fprintf oc "\n};\n\n";
+  Printf.fprintf oc "static char caml_sections[] ={\n";
+  let sections = [ ] in
+  close_out oc;
+  (0,0,0,0)
+

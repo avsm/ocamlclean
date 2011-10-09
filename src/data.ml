@@ -115,5 +115,5 @@ let parse_c ic =
   let prim_buf:string = Obj.magic (List.assoc "PRIM" sections) in
   (* Primitive strings are NUL-separated *)
   let prims = Array.of_list (Str.(split (regexp_string "\000") prim_buf)) in
-  data, prims
+  data, prims, sections
 

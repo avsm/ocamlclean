@@ -43,10 +43,7 @@ in
       | None -> error "bytecode executable source file undefined";
       | Some f -> f
   in
-  let loadfn = match Filename.check_suffix source_file ".c" with
-    |true -> Loader.load_c
-    |false -> Loader.load
-  in
+  let compile loadfn exportfn =
     try
       let pass_counter = ref 0 in
       let rec compress_loop orig_code prim data =
@@ -82,7 +79,7 @@ in
       print_done ();
       print_msg (Printf.sprintf "Writing `%s'... " !dest_file);
       let (new_code_length, new_data_length, new_prim_length, new_file_length) =
-	Linker.export !dest_file code prim data begn dumps
+	exportfn !dest_file code prim data begn dumps
       in
       print_done ();
       let new_instr_nb = Array.length code in
@@ -113,4 +110,9 @@ Statistics:\n\
       | Prim.Exn msg ->
 	  Printf.eprintf "Error: %s\n" msg;
 	  exit 1;
+  in
+ match Filename.check_suffix source_file ".c" with
+    |true -> compile Loader.load_c Linker.export_c
+    |false -> compile Loader.load Linker.export
+
 ;;
