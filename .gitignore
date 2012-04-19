@@ -2,3 +2,4 @@ _build
 config.ml
 /etc/
 /bin/
+.*.swp
