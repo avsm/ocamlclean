@@ -68,6 +68,9 @@ let export oc data =
   output_value oc data;
 ;;
 
+let export_c oc data =
+  C_util.output_data_string oc (Marshal.to_string data [])
+
 let print data =
   let open Printf in let open Obj in
   let ctr = ref 0 in
