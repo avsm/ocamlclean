@@ -61,8 +61,43 @@ char **argv);
 static int caml_code[] = {";
   Code.export_c oc code;
   Printf.fprintf oc "\n};\n\n";
+  Printf.fprintf oc "static char caml_data[] = {\n";
+  Data.export_c oc data;
+  Printf.fprintf oc "};\n\n";
+  (* Write out the PRIM and SYMB sections.
+   * PRIM is a \000-terminated string *)
+  let primbuf = Buffer.create 1 in
+  Array.iter (fun p ->
+    Buffer.add_string primbuf p;
+    Buffer.add_char primbuf '\000'
+  ) prim;
+  let prims = Obj.repr (Buffer.contents primbuf) in
+  let symb = Obj.repr [| |] in
+  let sections = [ "SYMB", symb; "PRIM", prims ] in
   Printf.fprintf oc "static char caml_sections[] ={\n";
-  let sections = [ ] in
+  C_util.output_data_string oc (Marshal.to_string sections []);
+  Printf.fprintf oc "};\n\n";
+  Array.iter (Printf.fprintf oc "extern value %s();\n") prim;
+  Printf.fprintf oc "typedef value (*primitive)();
+primitive caml_builtin_cprim[] = {\n";
+  Array.iter (Printf.fprintf oc "  (primitive)%s,\n") prim;
+  Printf.fprintf oc "  (primitive) 0 };\n";
+  Printf.fprintf oc "const char * caml_names_of_builtin_cprim[] = {\n";
+  Array.iter (Printf.fprintf oc "\"%s\",\n") prim;
+  Printf.fprintf oc "  (char *) 0 };\n\n";
+  Printf.fprintf oc "\n
+void caml_startup(char ** argv)
+{
+  caml_startup_code(caml_code, sizeof(caml_code),
+                    caml_data, sizeof(caml_data),
+                    caml_sections, sizeof(caml_sections),
+                    argv);
+}
+
+#ifdef __cplusplus
+}
+#endif
+";
   close_out oc;
   (0,0,0,0)
 
