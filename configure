@@ -43,6 +43,7 @@ check_command "cp"
 check_command "rm"
 check_command "ar"
 check_command "cp"
+mkdir -p etc
 
 ###
 
@@ -76,10 +77,10 @@ done
 echo -n "\
 BINDIR = $BINDIR
 MANDIR = $MANDIR
-OCAMLC = $OCAMLC -w Ae -warn-error A
-OCAMLOPT = $OCAMLOPT -w Ae -warn-error A
+OCAMLC = $OCAMLC -w Ae
+OCAMLOPT = $OCAMLOPT -w Ae 
 OCAMLC_UNSAFE = $OCAMLC
-OCAMLBUILD = $OCAMLBUILD -cflags -w,Ae,-warn-error,A -no-links
+OCAMLBUILD = $OCAMLBUILD -cflags -w,Ae -no-links
 BIN = $PWD/bin
 ETC = $PWD/etc
 DIST = $PWD/dist

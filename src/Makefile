@@ -18,6 +18,7 @@ BUILD = main.native
 ocamlclean: $(TARG)
 
 $(TARG): _build/$(BUILD)
+	mkdir -p $(BIN)
 	cp $< $@
 
 _build/$(BUILD): $(SRCS) config.ml
