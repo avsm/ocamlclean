@@ -126,7 +126,7 @@ let compute_branch_targets code =
     btargs
 ;;
 
-let export_code write oc code =
+let export_code write code =
   let nb_instr = Array.length code in
   let btargs = compute_branch_targets code in
   let map = Array.make nb_instr (-1) in
@@ -344,7 +344,7 @@ let export oc code =
     output_byte oc ((n asr 16) land 0xFF);
     output_byte oc ((n asr 24) land 0xFF);
   in
-  export_code write oc code
+  export_code write code
 
 let export_c oc code =
   let open C_util in
@@ -356,7 +356,7 @@ let export_c oc code =
     s.[3] <- Char.chr ((n asr 24) land 0xFF);
     output_code_string oc s
   in
-  export_code write oc code
+  export_code write code
 
 let parse_c ic =
   let rec scan_until s = 
